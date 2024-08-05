@@ -1,0 +1,11 @@
+{
+	"name": "@acryps/glyph",
+	"version": "0.0.1",
+	"bin": {
+		"glyph": "./index.js"
+	},
+	"dependencies": {
+		"webfonts-generator": "^0.4.0",
+		"xmldom": "^0.6.0"
+	}
+}
