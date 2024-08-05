@@ -27,7 +27,7 @@ const iconNames = [];
 // scale all icons to fit this size
 // webfont generator will mess up if the files have multiple sizes
 // the generator will mess up with small files (rounding issues)
-const targetSize = 1024;
+const targetSize = 250;
 
 for (let file of readdirSync(sourcePath)) {
 	if (file.endsWith('.svg')) {
