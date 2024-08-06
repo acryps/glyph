@@ -24,11 +24,6 @@ mkdirSync(temporaryWorkingDirectory, { recursive: true });
 const sourceFiles = [];
 const iconNames = [];
 
-// scale all icons to fit this size
-// webfont generator will mess up if the files have multiple sizes
-// the generator will mess up with small files (rounding issues)
-const targetSize = 250;
-
 for (let file of readdirSync(sourcePath)) {
 	if (file.endsWith('.svg')) {
 		let name = file.toLowerCase().replace('.svg', '').replace(/[^a-z\-0-9]/g, '-');
@@ -41,15 +36,21 @@ for (let file of readdirSync(sourcePath)) {
 		
 		const image = new DOMParser().parseFromString(readFileSync(join(sourcePath, file)).toString());
 		
-		// create viewbox with current dimensions, if there is none yet
-		if (!image.documentElement.hasAttribute('viewBox')) {
-			image.documentElement.setAttribute('viewBox', `0 0 ${image.documentElement.getAttribute('width')} ${image.documentElement.getAttribute('height')}`);
+		// fix image size to viewbox¨
+		// svgicons2svgfont fails if the viewbox does not match the icons size
+		// 
+		// this will break some icons, where the viewbox does not match the icon size
+		// checking if the viewbox starts at 0 will handle this
+		if (image.documentElement.hasAttribute('viewBox')) {
+			const viewBox = image.documentElement.getAttribute('viewBox').trim().split(/\s+/);
+			
+			if (viewBox[0] != '0' || viewBox[1] != '0') {
+				throw new Error(`Icon '${join(sourcePath, file)}' has an invalid viewBox. All icons must have a viewBox starting at 0 0. Try to re-export the icon in a graphics tool`);
+			}
+			
+			image.documentElement.setAttribute('width', viewBox[2]);
+			image.documentElement.setAttribute('height', viewBox[3]);
 		}
-		
-		const aspectRatio = +image.documentElement.getAttribute('width').replace(/[^0-9]/g, '') / +image.documentElement.getAttribute('height').replace(/[^0-9]/g, '');
-		
-		image.documentElement.setAttribute('height', targetSize);
-		image.documentElement.setAttribute('width', targetSize * aspectRatio);
 		
 		// write source image
 		const sourceName = join(temporaryWorkingDirectory, name);
