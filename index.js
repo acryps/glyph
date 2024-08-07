@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-const { randomUUID } = require('crypto');
-const { mkdirSync, readdirSync, readFileSync, writeFileSync, renameSync, createWriteStream, rmdirSync, rmSync } = require('fs');
+const { randomUUID, createHash } = require('crypto');
+const { mkdirSync, readdirSync, readFileSync, writeFileSync, renameSync, createWriteStream, rmdirSync, rmSync, existsSync } = require('fs');
 const { basename, dirname, join } = require('path');
 const { DOMParser, XMLSerializer } = require('xmldom');
 const webfontsGenerator = require('webfonts-generator');
@@ -74,16 +74,6 @@ webfontsGenerator({
 	const fontSourceFileDirectory = join(outputPath, 'font');
 	mkdirSync(fontSourceFileDirectory, { recursive: true });
 	
-	for (let format in formats) {
-		renameSync(join(webfontOutputDirectory, `iconfont.${format}`), join(fontSourceFileDirectory, `index.${format}`));
-	}
-	
-	rmSync(webfontOutputDirectory, { recursive: true });
-	
-	for (let source of sourceFiles) {
-		rmSync(source);
-	}
-	
 	const writer = createWriteStream(join(outputPath, 'index.ts'));
 
 	writer.write(`import { select, style, content, Font, fontFamily, fontWeight, fontStyle } from '@acryps/style';\n\n`);
@@ -92,10 +82,24 @@ webfontsGenerator({
 	writer.write(`export const iconFont = new Font('icons', fontWeight('normal'), fontStyle('normal'))`);
 
 	for (let format in formats) {
-		writer.write(`\n\t.addSource('${basePath}/index.${format}', '${formats[format]}')`);
+		const path = join(webfontOutputDirectory, `iconfont.${format}`);
+		
+		if (existsSync(path)) {
+			const hash = createHash('sha1').update(readFileSync(path)).digest('base64');
+			
+			renameSync(path, join(fontSourceFileDirectory, `index.${format}`));
+		
+			writer.write(`\n\t.addSource('${basePath}/index.${format}?${hash}', '${formats[format]}')`);
+		}
 	}
-
+	
 	writer.write(';\n\n');
+	
+	rmSync(webfontOutputDirectory, { recursive: true });
+	
+	for (let source of sourceFiles) {
+		rmSync(source);
+	}
 
 	writer.write(`export const icons = () => select('ui-icon',\n`);
 	writer.write(`\tfontFamily(iconFont.name),\n`);
