@@ -85,7 +85,7 @@ webfontsGenerator({
 		const path = join(webfontOutputDirectory, `iconfont.${format}`);
 		
 		if (existsSync(path)) {
-			const hash = createHash('sha1').update(readFileSync(path)).digest('base64');
+			const hash = createHash('sha1').update(readFileSync(path)).digest('hex').substring(0, 12);
 			
 			renameSync(path, join(fontSourceFileDirectory, `index.${format}`));
 		
