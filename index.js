@@ -2,7 +2,7 @@
 
 const { randomUUID, createHash } = require('crypto');
 const { mkdirSync, readdirSync, readFileSync, writeFileSync, renameSync, createWriteStream, rmdirSync, rmSync, existsSync } = require('fs');
-const { basename, dirname, join } = require('path');
+const { basename, dirname, join, normalize } = require('path');
 const { DOMParser, XMLSerializer } = require('xmldom');
 const webfontsGenerator = require('webfonts-generator');
 
@@ -65,7 +65,10 @@ mkdirSync(webfontOutputDirectory);
 
 webfontsGenerator({
 	files: sourceFiles,
-	dest: webfontOutputDirectory
+	dest: webfontOutputDirectory,
+	fontHeight: 2048,
+	normalize: true,
+	round: 1e12
 }, error => {
 	if (error) {
 		throw error;
